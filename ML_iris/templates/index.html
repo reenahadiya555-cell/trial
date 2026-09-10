@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Iris Flower Prediction{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 20px;">
+    <!-- Header Section -->
+    <div class="header text-center mb-5">
+        <h1>🌸 Iris Flower Classification 🌸</h1>
+        <p>Machine Learning Project using SVM & KNN Models</p>
+        <p class="small">Dataset: Iris Species | Accuracy: 96%+</p>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient text-black">
+                    <i class="fas fa-chart-line"></i> Input Flower Measurements
+                </div>
+                <div class="card-body">
+                    <form id="predictionForm">
+                        <div class="mb-3">
+                            <label class="form-label">🌿 Sepal Length (cm)</label>
+                            <input type="number" step="0.1" class="form-control" 
+                                   name="SepalLengthCm" id="SepalLengthCm" 
+                                   required placeholder="e.g., 5.1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">🌿 Sepal Width (cm)</label>
+                            <input type="number" step="0.1" class="form-control" 
+                                   name="SepalWidthCm" id="SepalWidthCm" 
+                                   required placeholder="e.g., 3.5">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">🌸 Petal Length (cm)</label>
+                            <input type="number" step="0.1" class="form-control" 
+                                   name="PetalLengthCm" id="PetalLengthCm" 
+                                   required placeholder="e.g., 1.4">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">🌸 Petal Width (cm)</label>
+                            <input type="number" step="0.1" class="form-control" 
+                                   name="PetalWidthCm" id="PetalWidthCm" 
+                                   required placeholder="e.g., 0.2">
+                        </div>
+                        
+                        <div class="model-selector mb-3">
+                            <label class="form-label">🤖 Select Model</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" 
+                                               name="model_choice" id="svm_model" value="svm" checked>
+                                        <label class="form-check-label" for="svm_model">
+                                            <i class="fas fa-chart-line"></i> Support Vector Machine (SVM)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" 
+                                               name="model_choice" id="knn_model" value="knn">
+                                        <label class="form-check-label" for="knn_model">
+                                            <i class="fas fa-chart-bar"></i> K-Nearest Neighbors (KNN)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Predict Species
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="col-md-6" style="margin-top: 0;">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient text-black">
+                    <i class="fas fa-chart-pie"></i> Prediction Results
+                </div>
+                <div class="card-body">
+                    <div id="predictionResult" style="display: none;">
+                        <div class="prediction-result text-center">
+                            <h4>Prediction Result</h4>
+                            <div class="prediction-class" id="predictedClass" style="font-size: 2rem; font-weight: bold;"></div>
+                            <div id="modelUsed" class="mt-2"></div>
+                            <div id="probabilityChart" style="height: 350px; margin-top: 20px;"></div>
+                        </div>
+                    </div>
+                    <div id="loadingIndicator" class="loading text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Analyzing flower measurements...</p>
+                    </div>
+                    <div id="initialMessage" class="text-center text-muted">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <p>Enter flower measurements and click predict to see results</p>
+                        <small>The model will analyze the data and predict the Iris species</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Comparison Section -->
+    <div class="row comparison-section mt-4">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient text-black">
+                    <i class="fas fa-exchange-alt"></i> Model Comparison
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-outline-primary mb-3 w-100" id="compareBtn">
+                        <i class="fas fa-chart-simple"></i> Compare Both Models for Current Input
+                    </button>
+                    <div id="comparisonResult" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-primary">
+                                            <i class="fas fa-chart-line"></i> SVM Model
+                                        </h5>
+                                        <div id="svmComparison"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-primary">
+                                            <i class="fas fa-chart-bar"></i> KNN Model
+                                        </h5>
+                                        <div id="knnComparison"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let probabilityChart = null;
+
+    document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Get values using IDs
+        const SepalLengthCm = document.getElementById('SepalLengthCm').value;
+        const SepalWidthCm = document.getElementById('SepalWidthCm').value;
+        const PetalLengthCm = document.getElementById('PetalLengthCm').value;
+        const PetalWidthCm = document.getElementById('PetalWidthCm').value;
+        const model_choice = document.querySelector('input[name="model_choice"]:checked').value;
+        
+        // Validate inputs
+        if (!SepalLengthCm || !SepalWidthCm || !PetalLengthCm || !PetalWidthCm) {
+            alert('Please fill all fields!');
+            return;
+        }
+        
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('SepalLengthCm', SepalLengthCm);
+        formData.append('SepalWidthCm', SepalWidthCm);
+        formData.append('PetalLengthCm', PetalLengthCm);
+        formData.append('PetalWidthCm', PetalWidthCm);
+        formData.append('model_choice', model_choice);
+        
+        // Debug: Log the data being sent
+        console.log('Sending data:', {
+            SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, model_choice
+        });
+        
+        document.getElementById('initialMessage').style.display = 'none';
+        document.getElementById('predictionResult').style.display = 'none';
+        document.getElementById('loadingIndicator').style.display = 'block';
+        
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            document.getElementById('loadingIndicator').style.display = 'none';
+            
+            if (data.success) {
+                document.getElementById('predictionResult').style.display = 'block';
+                document.getElementById('predictedClass').innerHTML = data.prediction;
+                document.getElementById('modelUsed').innerHTML = `<small><i class="fas fa-microchip"></i> Model: ${data.model_used}</small>`;
+                
+                // Create probability chart
+                const probabilities = Object.values(data.probabilities);
+                const labels = Object.keys(data.probabilities);
+                
+                if (probabilityChart) {
+                    Plotly.purge('probabilityChart');
+                }
+                
+                Plotly.newPlot('probabilityChart', [{
+                    x: labels,
+                    y: probabilities,
+                    type: 'bar',
+                    marker: {
+                        color: ['#FF6B6B', '#4ECDC4', '#45B7D1'],
+                        line: {
+                            color: 'rgba(0,0,0,0.5)',
+                            width: 2
+                        }
+                    },
+                    text: probabilities.map(p => (p * 100).toFixed(1) + '%'),
+                    textposition: 'auto',
+                    textfont: {
+                        size: 12,
+                        weight: 'bold'
+                    }
+                }], {
+                    title: {
+                        text: 'Prediction Probabilities',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    yaxis: {
+                        title: 'Probability',
+                        range: [0, 1],
+                        tickformat: '.0%',
+                        gridcolor: '#e0e0e0'
+                    },
+                    xaxis: {
+                        title: 'Species',
+                        titlefont: {
+                            size: 14
+                        }
+                    },
+                    plot_bgcolor: '#f8f9fa',
+                    paper_bgcolor: 'white',
+                    bargap: 0.3,
+                    showlegend: false
+                }, {responsive: true});
+                
+                // Smooth scroll to results
+                document.querySelector('.col-md-6 .card').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            } else {
+                alert('Error: ' + data.error);
+                document.getElementById('initialMessage').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error connecting to server. Please make sure Flask is running.');
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('initialMessage').style.display = 'block';
+        }
+    });
+    
+    document.getElementById('compareBtn').addEventListener('click', async () => {
+        const SepalLengthCm = document.getElementById('SepalLengthCm').value;
+        const SepalWidthCm = document.getElementById('SepalWidthCm').value;
+        const PetalLengthCm = document.getElementById('PetalLengthCm').value;
+        const PetalWidthCm = document.getElementById('PetalWidthCm').value;
+        
+        if (!SepalLengthCm || !SepalWidthCm || !PetalLengthCm || !PetalWidthCm) {
+            alert('Please enter all flower measurements first!');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/compare_models', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    SepalLengthCm: parseFloat(SepalLengthCm),
+                    SepalWidthCm: parseFloat(SepalWidthCm),
+                    PetalLengthCm: parseFloat(PetalLengthCm),
+                    PetalWidthCm: parseFloat(PetalWidthCm)
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('comparisonResult').style.display = 'block';
+                
+                document.getElementById('svmComparison').innerHTML = `
+                    <div class="text-center">
+                        <div class="prediction-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <i class="fas fa-chart-line"></i> ${data.svm.prediction}
+                        </div>
+                        <hr>
+                        <small>Probabilities:</small>
+                        <ul class="list-unstyled mt-2">
+                            <li>🌸 Setosa: ${(data.svm.probabilities.Setosa * 100).toFixed(1)}%</li>
+                            <li>🌿 Versicolor: ${(data.svm.probabilities.Versicolor * 100).toFixed(1)}%</li>
+                            <li>🌺 Virginica: ${(data.svm.probabilities.Virginica * 100).toFixed(1)}%</li>
+                        </ul>
+                    </div>
+                `;
+                
+                document.getElementById('knnComparison').innerHTML = `
+                    <div class="text-center">
+                        <div class="prediction-badge" style="background: linear-gradient(135deg,#667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <i class="fas fa-chart-bar"></i> ${data.knn.prediction}
+                        </div>
+                        <hr>
+                        <small>Probabilities:</small>
+                        <ul class="list-unstyled mt-2">
+                            <li>🌸 Setosa: ${(data.knn.probabilities.Setosa * 100).toFixed(1)}%</li>
+                            <li>🌿 Versicolor: ${(data.knn.probabilities.Versicolor * 100).toFixed(1)}%</li>
+                            <li>🌺 Virginica: ${(data.knn.probabilities.Virginica * 100).toFixed(1)}%</li>
+                        </ul>
+                    </div>
+                `;
+                
+                // Smooth scroll to comparison section
+                document.querySelector('.comparison-section').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error comparing models. Please try again.');
+        }
+    });
+</script>
+
+<style>
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .prediction-class {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .btn-outline-primary:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
